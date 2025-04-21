@@ -1,0 +1,70 @@
+{
+  "id": "WH-6RJ711944A876083P-83N62639TP687840B",
+  "event_version": "1.0",
+  "create_time": "2025-04-19T10:46:22.222Z",
+  "resource_type": "checkout-order",
+  "resource_version": "2.0",
+  "event_type": "CHECKOUT.ORDER.APPROVED",
+  "summary": "An order has been approved by buyer",
+  "resource": {
+    "create_time": "2025-04-19T10:44:16Z",
+    "purchase_units": [
+      {
+        "reference_id": "default",
+        "amount": { "currency_code": "USD", "value": "1.00", "breakdown": {} },
+        "payee": {
+          "email_address": "sb-7isaq40170208@business.example.com",
+          "merchant_id": "BU325H9EQNV6W",
+          "display_data": { "brand_name": "manfra.io" }
+        }
+      }
+    ],
+    "links": [
+      {
+        "href": "https://api.sandbox.paypal.com/v2/checkout/orders/41R26981KH895292U",
+        "rel": "self",
+        "method": "GET"
+      },
+      {
+        "href": "https://api.sandbox.paypal.com/v2/checkout/orders/41R26981KH895292U",
+        "rel": "update",
+        "method": "PATCH"
+      },
+      {
+        "href": "https://api.sandbox.paypal.com/v2/checkout/orders/41R26981KH895292U/capture",
+        "rel": "capture",
+        "method": "POST"
+      }
+    ],
+    "id": "41R26981KH895292U",
+    "payment_source": {
+      "paypal": {
+        "email_address": "gohilmira95@gmail.com",
+        "account_id": "25QTTB4QCF664",
+        "account_status": "UNVERIFIED",
+        "name": { "given_name": "mira", "surname": "gohil dodiya" },
+        "address": { "country_code": "US" }
+      }
+    },
+    "intent": "CAPTURE",
+    "payer": {
+      "name": { "given_name": "mira", "surname": "gohil dodiya" },
+      "email_address": "gohilmira95@gmail.com",
+      "payer_id": "25QTTB4QCF664",
+      "address": { "country_code": "US" }
+    },
+    "status": "APPROVED"
+  },
+  "links": [
+    {
+      "href": "https://api.sandbox.paypal.com/v1/notifications/webhooks-events/WH-6RJ711944A876083P-83N62639TP687840B",
+      "rel": "self",
+      "method": "GET"
+    },
+    {
+      "href": "https://api.sandbox.paypal.com/v1/notifications/webhooks-events/WH-6RJ711944A876083P-83N62639TP687840B/resend",
+      "rel": "resend",
+      "method": "POST"
+    }
+  ]
+}
