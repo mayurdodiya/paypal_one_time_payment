@@ -22,6 +22,7 @@ module.exports = {
       let capturePayment;
 
       if (event.event_type === "CHECKOUT.ORDER.APPROVED") {
+        // update payment table status as order.approved here  
         const orderId = event?.resource?.id;
         const url = `https://api.sandbox.paypal.com/v2/checkout/orders/${orderId}/capture`;
 
@@ -42,35 +43,40 @@ module.exports = {
         const accessToken = tokenResponse.data.access_token;
 
         // Manually capture payment
-        const captureResponse = await axios.post(
-          url,
-          {
-            body: {
-              phoneNo: 9898989898,
-              orderId: "degfrg8vbnu81gb811thb15",
-              paymentId: "brgbvvfb48jty",
-              amount: 1,
-            },
+        const captureResponse = await axios({
+          url: url,
+          method: "post",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${accessToken}`,
           },
-          {
-            headers: {
-              "Content-Type": "application/json",
-              Authorization: `Bearer ${accessToken}`,
-            },
+          body: {
+            phoneNo: 9898989898,
+            orderId: "degfrg8vbnu81gb811thb15",
+            paymentId: "brgbvvfb48jty",
+            amount: 1,
           }
-        );
+        });
 
         capturePayment = captureResponse.data;
+        // fs.writeFileSync('xpaymentCaptureData.json', JSON.stringify(capturePayment, null, 2));
       } else if (event.event_type === "PAYMENT.CAPTURE.COMPLETED") {
-        console.log(event.event_type, "------------------------------------------ PAYMENT.CAPTURE.COMPLETED");
+        console.log(event, "------------------------------------------ PAYMENT.CAPTURE.COMPLETED");
 
-        const obj = {
-          orderId: event.id,
-          phoneNo: "igeg8gege9e8",
-          paymentId: event.id,
-          amount: 10,
-        };
-        await PaymenModel.create(obj);
+        const custom_id = event?.resource?.custom_id;
+        let userData;
+        if (custom_id) {
+          userData = JSON.parse(custom_id)
+          const obj = {
+            orderId: event.id,
+            phoneNo: userData?.phoneNo,
+            paymentId: userData?.paymentId,
+            amount: 10,
+          };
+          // only update payment table as per orderId don't create new data
+          // await PaymenModel.create(obj);
+          // fs.writeFileSync('xpaymentCaptureWebhook.json', JSON.stringify(event, null, 2));
+        }
       } else {
         console.log("unknown event -----------------------------");
       }
@@ -109,6 +115,13 @@ module.exports = {
               currency_code: "USD",
               value: "12",
             },
+            // customer data
+            custom_id: JSON.stringify({
+              phoneNo: 9898989898,
+              orderId: "degfrg8vbnu81gb811thb15",
+              paymentId: "brgbvvfb48jty",
+              amount: 1,
+            })
           },
         ],
         application_context: {
