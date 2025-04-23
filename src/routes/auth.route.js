@@ -10,9 +10,8 @@ router.get("/paypalcancel", authController.paypalcancel);
 router.post("/paypalOn", authController.paypalOn);
 router.post("/paypalDemoAsOralense", authController.paypalDemoAsOralense);
 
-// us app webhook => https://brpmpr08-3001.inc1.devtunnels.ms/api/v1/auth/webhook/us_bussiness_app
+// us app webhook =>  https://162c-2405-201-200d-115e-8611-16d9-c6c0-2895.ngrok-free.app/v1/auth/webhook/us_bussiness_app
 // rejoice bussiness acc us right
-router.post('/webhook/us_bussiness_app', authController.webhook)
-
+router.post("/webhook/us_bussiness_app", authController.webhook);
 
 module.exports = router;

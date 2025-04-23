@@ -1,0 +1,36 @@
+{
+  id: 'WH-8KF39043PC4389328-1S72798471985150T',
+  event_version: '1.0',
+  create_time: '2025-04-22T04:48:40.564Z',
+  resource_type: 'checkout-order',
+  resource_version: '2.0',
+  event_type: 'CHECKOUT.ORDER.APPROVED',
+  summary: 'An order has been approved by buyer',
+  resource: {
+    create_time: '2025-04-22T04:42:55Z',
+    purchase_units: [ [Object] ],
+    links: [ [Object], [Object], [Object] ],
+    id: '7N379103DC6167907',
+    payment_source: { paypal: [Object] },
+    intent: 'CAPTURE',
+    payer: {
+      name: [Object],
+      email_address: 'mayurdodiya1234@gmail.com',
+      payer_id: 'MGGDHYZ9S9BMA',
+      address: [Object]
+    },
+    status: 'APPROVED'
+  },
+  links: [
+    {
+      href: 'https://api.sandbox.paypal.com/v1/notifications/webhooks-events/WH-8KF39043PC4389328-1S72798471985150T',
+      rel: 'self',
+      method: 'GET'
+    },
+    {
+      href: 'https://api.sandbox.paypal.com/v1/notifications/webhooks-events/WH-8KF39043PC4389328-1S72798471985150T/resend',
+      rel: 'resend',
+      method: 'POST'
+    }
+  ]
+}

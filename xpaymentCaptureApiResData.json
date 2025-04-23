@@ -1,0 +1,381 @@
+// {
+//   "id": "55A78715N8595842C",
+//   "status": "COMPLETED",
+//   "payment_source": {
+//     "paypal": {
+//       "email_address": "gohilmira95@gmail.com",
+//       "account_id": "L6BTQUDJ4BK6W",
+//       "account_status": "UNVERIFIED",
+//       "name": {
+//         "given_name": "mira",
+//         "surname": "gohil dodiya"
+//       },
+//       "address": {
+//         "country_code": "US"
+//       }
+//     }
+//   },
+//   "purchase_units": [
+//     {
+//       "reference_id": "default",
+//       "payments": {
+//         "captures": [
+//           {
+//             "id": "9A840223W5571423F",
+//             "status": "COMPLETED",
+//             "amount": {
+//               "currency_code": "USD",
+//               "value": "12.00"
+//             },
+//             "final_capture": true,
+//             "seller_protection": {
+//               "status": "ELIGIBLE",
+//               "dispute_categories": [
+//                 "ITEM_NOT_RECEIVED",
+//                 "UNAUTHORIZED_TRANSACTION"
+//               ]
+//             },
+//             "seller_receivable_breakdown": {
+//               "gross_amount": {
+//                 "currency_code": "USD",
+//                 "value": "12.00"
+//               },
+//               "paypal_fee": {
+//                 "currency_code": "USD",
+//                 "value": "0.91"
+//               },
+//               "net_amount": {
+//                 "currency_code": "USD",
+//                 "value": "11.09"
+//               }
+//             },
+//             "custom_id": "{\"phoneNo\":9898989898,\"orderId\":\"degfrg8vbnu81gb811thb15\",\"paymentId\":\"brgbvvfb48jty\",\"amount\":1}",
+//             "links": [
+//               {
+//                 "href": "https://api.sandbox.paypal.com/v2/payments/captures/9A840223W5571423F",
+//                 "rel": "self",
+//                 "method": "GET"
+//               },
+//               {
+//                 "href": "https://api.sandbox.paypal.com/v2/payments/captures/9A840223W5571423F/refund",
+//                 "rel": "refund",
+//                 "method": "POST"
+//               },
+//               {
+//                 "href": "https://api.sandbox.paypal.com/v2/checkout/orders/55A78715N8595842C",
+//                 "rel": "up",
+//                 "method": "GET"
+//               }
+//             ],
+//             "create_time": "2025-04-21T16:23:10Z",
+//             "update_time": "2025-04-21T16:23:10Z"
+//           }
+//         ]
+//       }
+//     }
+//   ],
+//   "payer": {
+//     "name": {
+//       "given_name": "mira",
+//       "surname": "gohil dodiya"
+//     },
+//     "email_address": "gohilmira95@gmail.com",
+//     "payer_id": "L6BTQUDJ4BK6W",
+//     "address": {
+//       "country_code": "US"
+//     }
+//   },
+//   "links": [
+//     {
+//       "href": "https://api.sandbox.paypal.com/v2/checkout/orders/55A78715N8595842C",
+//       "rel": "self",
+//       "method": "GET"
+//     }
+//   ]
+// }
+
+{
+  status: 201,
+  statusText: 'Created',
+  headers: Object [AxiosHeaders] {
+    'content-type': 'application/json',
+    'content-length': '1730',
+    connection: 'keep-alive',
+    date: 'Tue, 22 Apr 2025 04:48:58 GMT',
+    'access-control-expose-headers': 'Server-Timing',
+    application_id: 'APP-8C6244065Y637532S',
+    'cache-control': 'max-age=0, no-cache, no-store, must-revalidate',
+    caller_acct_num: 'BU325H9EQNV6W',
+    'paypal-debug-id': '8bc12ebf0c35b',
+    'server-timing': 'traceparent;desc="00-00000000000000000008bc12ebf0c35b-f6be69ca4130ffff-01"',
+    traceparent: '00-00000000000000000008bc12ebf0c35b-40c5beb9c4c9fd16-01',
+    vary: 'Accept-Encoding',
+    http_x_pp_az_locator: 'ccg18.slc',
+    'strict-transport-security': 'max-age=31536000; includeSubDomains'
+  },
+  config: {
+    transitional: {
+      silentJSONParsing: true,
+      forcedJSONParsing: true,
+      clarifyTimeoutError: false
+    },
+    adapter: [ 'xhr', 'http', 'fetch' ],
+    transformRequest: [ [Function: transformRequest] ],
+    transformResponse: [ [Function: transformResponse] ],
+    timeout: 0,
+    xsrfCookieName: 'XSRF-TOKEN',
+    xsrfHeaderName: 'X-XSRF-TOKEN',
+    maxContentLength: -1,
+    maxBodyLength: -1,
+    env: { FormData: [Function [FormData]], Blob: [class Blob] },
+    validateStatus: [Function: validateStatus],
+    headers: Object [AxiosHeaders] {
+      Accept: 'application/json, text/plain, ',
+      'Content-Type': 'application/json',
+      Authorization: 'Bearer A21AAL3KMBsnNwuu_H5bjktg7kYiV2n_UGaOS1t-IV6Xwd7HsPBg9Fn3bKbLrdBXb6s3YlOhoeNK_MoKa_MLoImIRJGUTfUOA',
+      'User-Agent': 'axios/1.8.4',
+      'Accept-Encoding': 'gzip, compress, deflate, br'
+    },
+    url: 'https://api.sandbox.paypal.com/v2/checkout/orders/7N379103DC6167907/capture',
+    method: 'post',
+    body: {
+      phoneNo: 9898989898,
+      orderId: 'degfrg8vbnu81gb811thb15',
+      paymentId: 'brgbvvfb48jty',
+      amount: 1
+    },
+    allowAbsoluteUrls: true,
+    data: undefined
+  },
+  request: <ref *1> ClientRequest {
+    _events: [Object: null prototype] {
+      abort: [Function (anonymous)],
+      aborted: [Function (anonymous)],
+      connect: [Function (anonymous)],
+      error: [Function (anonymous)],
+      socket: [Function (anonymous)],
+      timeout: [Function (anonymous)],
+      finish: [Function: requestOnFinish]
+    },
+    _eventsCount: 7,
+    _maxListeners: undefined,
+    outputData: [],
+    outputSize: 0,
+    writable: true,
+    destroyed: true,
+    _last: false,
+    chunkedEncoding: false,
+    shouldKeepAlive: true,
+    maxRequestsOnConnectionReached: false,
+    _defaultKeepAlive: true,
+    useChunkedEncodingByDefault: true,
+    sendDate: false,
+    _removedConnection: false,
+    _removedContLen: false,
+    _removedTE: false,
+    strictContentLength: false,
+    _contentLength: 0,
+    _hasBody: true,
+    _trailer: '',
+    finished: true,
+    _headerSent: true,
+    _closed: true,
+    socket: TLSSocket {
+      _tlsOptions: [Object],
+      _secureEstablished: true,
+      _securePending: false,
+      _newSessionPending: false,
+      _controlReleased: true,
+      secureConnecting: false,
+      _SNICallback: null,
+      servername: 'api.sandbox.paypal.com',
+      alpnProtocol: false,
+      authorized: true,
+      authorizationError: null,
+      encrypted: true,
+      _events: [Object: null prototype],
+      _eventsCount: 9,
+      connecting: false,
+      _hadError: false,
+      _parent: null,
+      _host: 'api.sandbox.paypal.com',
+      _closeAfterHandlingError: false,
+      _readableState: [ReadableState],
+      _writableState: [WritableState],
+      allowHalfOpen: false,
+      _maxListeners: undefined,
+      _sockname: null,
+      _pendingData: null,
+      _pendingEncoding: '',
+      server: undefined,
+      _server: null,
+      ssl: [TLSWrap],
+      _requestCert: true,
+      _rejectUnauthorized: true,
+      timeout: 5000,
+      parser: null,
+      _httpMessage: null,
+      [Symbol(alpncallback)]: null,
+      [Symbol(res)]: [TLSWrap],
+      [Symbol(verified)]: true,
+      [Symbol(pendingSession)]: null,
+      [Symbol(async_id_symbol)]: -1,
+      [Symbol(kHandle)]: [TLSWrap],
+      [Symbol(lastWriteQueueSize)]: 0,
+      [Symbol(timeout)]: Timeout {
+        _idleTimeout: 5000,
+        _idlePrev: [TimersList],
+        _idleNext: [Timeout],
+        _idleStart: 372454,
+        _onTimeout: [Function: bound ],
+        _timerArgs: undefined,
+        _repeat: null,
+        _destroyed: false,
+        [Symbol(refed)]: false,
+        [Symbol(kHasPrimitive)]: false,
+        [Symbol(asyncId)]: 404,
+        [Symbol(triggerId)]: 402
+      },
+      [Symbol(kBuffer)]: null,
+      [Symbol(kBufferCb)]: null,
+      [Symbol(kBufferGen)]: null,
+      [Symbol(shapeMode)]: true,
+      [Symbol(kCapture)]: false,
+      [Symbol(kSetNoDelay)]: false,
+      [Symbol(kSetKeepAlive)]: true,
+      [Symbol(kSetKeepAliveInitialDelay)]: 1,
+      [Symbol(kBytesRead)]: 0,
+      [Symbol(kBytesWritten)]: 0,
+      [Symbol(connect-options)]: [Object]
+    },
+    _header: 'POST /v2/checkout/orders/7N379103DC6167907/capture HTTP/1.1\r\n' +
+      'Accept: application/json, text/plain, */r\n' +
+      'Content-Type: application/json\r\n' +
+      'Authorization: Bearer A21AAL3KMBsnNwuu_H5bjktg7kYiV2n_UGaOS1t-IV6Xwd7HsPBg9Fn3bKbLrdBXb6s3YlOhoeNK_MoKa_MLoImIRJGUTfUOA\r\n' +
+      'User-Agent: axios/1.8.4\r\n' +
+      'Accept-Encoding: gzip, compress, deflate, br\r\n' +
+      'Host: api.sandbox.paypal.com\r\n' +
+      'Connection: keep-alive\r\n' +
+      'Content-Length: 0\r\n' +
+      '\r\n',
+    _keepAliveTimeout: 0,
+    _onPendingData: [Function: nop],
+    agent: Agent {
+      _events: [Object: null prototype],
+      _eventsCount: 2,
+      _maxListeners: undefined,
+      defaultPort: 443,
+      protocol: 'https:',
+      options: [Object: null prototype],
+      requests: [Object: null prototype] {},
+      sockets: [Object: null prototype] {},
+      freeSockets: [Object: null prototype],
+      keepAliveMsecs: 1000,
+      keepAlive: true,
+      maxSockets: Infinity,
+      maxFreeSockets: 256,
+      scheduling: 'lifo',
+      maxTotalSockets: Infinity,
+      totalSocketCount: 2,
+      maxCachedSessions: 100,
+      _sessionCache: [Object],
+      [Symbol(shapeMode)]: false,
+      [Symbol(kCapture)]: false
+    },
+    socketPath: undefined,
+    method: 'POST',
+    maxHeaderSize: undefined,
+    insecureHTTPParser: undefined,
+    joinDuplicateHeaders: undefined,
+    path: '/v2/checkout/orders/7N379103DC6167907/capture',
+    _ended: true,
+    res: IncomingMessage {
+      _events: [Object],
+      _readableState: [ReadableState],
+      _maxListeners: undefined,
+      socket: null,
+      httpVersionMajor: 1,
+      httpVersionMinor: 1,
+      httpVersion: '1.1',
+      complete: true,
+      rawHeaders: [Array],
+      rawTrailers: [],
+      joinDuplicateHeaders: undefined,
+      aborted: false,
+      upgrade: false,
+      url: '',
+      method: null,
+      statusCode: 201,
+      statusMessage: 'Created',
+      client: [TLSSocket],
+      _consuming: true,
+      _dumped: false,
+      req: [Circular *1],
+      _eventsCount: 4,
+      responseUrl: 'https://api.sandbox.paypal.com/v2/checkout/orders/7N379103DC6167907/capture',
+      redirects: [],
+      [Symbol(shapeMode)]: true,
+      [Symbol(kCapture)]: false,
+      [Symbol(kHeaders)]: [Object],
+      [Symbol(kHeadersCount)]: 28,
+      [Symbol(kTrailers)]: null,
+      [Symbol(kTrailersCount)]: 0
+    },
+    aborted: false,
+    timeoutCb: null,
+    upgradeOrConnect: false,
+    parser: null,
+    maxHeadersCount: null,
+    reusedSocket: false,
+    host: 'api.sandbox.paypal.com',
+    protocol: 'https:',
+    _redirectable: Writable {
+      _events: [Object],
+      _writableState: [WritableState],
+      _maxListeners: undefined,
+      _options: [Object],
+      _ended: true,
+      _ending: true,
+      _redirectCount: 0,
+      _redirects: [],
+      _requestBodyLength: 0,
+      _requestBodyBuffers: [],
+      _eventsCount: 3,
+      _onNativeResponse: [Function (anonymous)],
+      _currentRequest: [Circular *1],
+      _currentUrl: 'https://api.sandbox.paypal.com/v2/checkout/orders/7N379103DC6167907/capture',
+      [Symbol(shapeMode)]: true,
+      [Symbol(kCapture)]: false
+    },
+    [Symbol(shapeMode)]: false,
+    [Symbol(kCapture)]: false,
+    [Symbol(kBytesWritten)]: 0,
+    [Symbol(kNeedDrain)]: false,
+    [Symbol(corked)]: 0,
+    [Symbol(kOutHeaders)]: [Object: null prototype] {
+      accept: [Array],
+      'content-type': [Array],
+      authorization: [Array],
+      'user-agent': [Array],
+      'accept-encoding': [Array],
+      host: [Array]
+    },
+    [Symbol(errored)]: null,
+    [Symbol(kHighWaterMark)]: 16384,
+    [Symbol(kRejectNonStandardBodyWrites)]: false,
+    [Symbol(kUniqueHeaders)]: null
+  },
+  data: {
+    id: '7N379103DC6167907',
+    status: 'COMPLETED',
+    payment_source: { paypal: [Object] },
+    purchase_units: [ [Object] ],
+    payer: {
+      name: [Object],
+      email_address: 'mayurdodiya1234@gmail.com',
+      payer_id: 'MGGDHYZ9S9BMA',
+      address: [Object]
+    },
+    links: [ [Object] ]
+  }
+} --------------------------------------- captureResponse call from order app
