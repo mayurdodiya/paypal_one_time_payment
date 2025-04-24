@@ -426,17 +426,13 @@ module.exports = {
   TwoParkwebhook: async (req, res) => {
     try {
       const event = req.body;
-      console.log(event, "--------------------------------------- webhook req.body");
 
       if (event.event_type === "CHECKOUT.ORDER.APPROVED") {
-        console.log(event?.resource?.purchase_units[0], "--------------------------------------- CHECKOUT.ORDER.APPROVED event?.resource?.purchase_units[0]");
-
         let data = event?.resource?.purchase_units[0]?.custom_id;
         const orderId = event?.resource?.id;
 
         if (data) {
           data = JSON.parse(data);
-          const url = `${process.env.PAYPAL_SANDBOX_URL}/v2/checkout/orders/${orderId}/capture`;
 
           await DB.PAYMENT.create({
             bookingId: data.bookingId,
@@ -447,63 +443,85 @@ module.exports = {
             paymentStatus: PAYMENT_STATUS.PENDING, //  order created but payment capture pending
           });
 
-          // const captureResponse = await paypalService.capturePayment({ orderId, bookingId:data.bookingId });
-          const accessToken = await paypalService.generatePaypalAccessToken();
-
-          // Manually capture payment
-          const captureResponse = await axios({
-            url: url,
-            method: "post",
-            headers: {
-              "Content-Type": "application/json",
-              Authorization: `Bearer ${accessToken}`,
-            },
-            body: {
-              orderId: orderId,
-              bookingId: data.bookingId,
-            },
-          });
-
-          console.log(captureResponse.data, "--------------------------------------- captureResponse call from order app");
-          // send response code to paypal
+          await paypalService.capturePayment({ orderId, bookingId: data.bookingId });
+          res.status(200).send("OK");
         }
       } else if (event.event_type === "PAYMENT.CAPTURE.COMPLETED") {
-        console.log(event?.resource, "------------------------------------------ PAYMENT.CAPTURE.COMPLETED");
-
         let data = event?.resource?.custom_id;
+
         if (data) {
           data = JSON.parse(data);
-          console.log(data, "------------------------------------------ PAYMENT.CAPTURE.COMPLETED data = JSON.parse(data);");
-
-          // only update payment table as per orderId don't create new data
           const obj = {
             paypalOrderId: data.orderId,
             paymentStatus: PAYMENT_STATUS.PAID,
             seller_receivable_breakdown: event?.resource?.seller_receivable_breakdown ?? {},
             paypalTransactionId: event?.resource?.id ?? "",
           };
+
           const payment = await DB.PAYMENT.findOneAndUpdate({ bookingId: data.bookingId }, { $set: { ...obj } }, { new: true });
           await DB.DAHBOOKEDPLATE.findOneAndUpdate({ _id: data.bookingId }, { $set: { paymentStatus: PAYMENT_STATUS.PAID, paymentId: payment._id } });
+          res.status(200).send("OK");
+
+          // send confirmation mail
+          if (data.bookingId) {
+            const bookingData = await DB.DAHBOOKEDPLATE.findById(data.bookingId);
+            const getLocation = await DB.DAHLOCATION.findById(bookingData.locationId);
+
+            if (bookingData) {
+              const mailObj = {
+                receiverEmail: bookingData.email,
+                subject: "Buchungsbestätigung",
+                name: bookingData.name,
+                surname: bookingData.nachname,
+                locationName: getLocation?.name,
+                rentalStart: moment(bookingData.fromTime).format("YYYY-MM-DD HH:mm:ss"),
+                rentalEnd: moment(bookingData.toTime).format("YYYY-MM-DD HH:mm:ss"),
+                licensePlate: bookingData.plateNumber,
+                year: moment(bookingData.toTime).format("YYYY"),
+              };
+              await EMAIL.commonEmail(mailObj);
+            }
+          }
         }
       } else if (event.event_type === "CHECKOUT.ORDER.DECLINED" || event.event_type === "PAYMENT.ORDER.CANCELLED" || event.event_type === "PAYMENT.CAPTURE.DENIED" || event.event_type === "PAYMENT.CAPTURE.DECLINED" || event.event_type === "PAYMENT.CAPTURE.PENDING") {
-        console.log(event.event_type, "payment failed -----------------------------");
-
         let data = event?.resource?.custom_id;
         if (data) {
           data = JSON.parse(data);
-          console.log(data, "------------------------------------------ PAYMENT.FAILED data = JSON.parse(data);");
 
-          const obj = { paypalOrderId: data.orderId, paymentStatus: PAYMENT_STATUS.FAILED };
+          const obj = {
+            paypalOrderId: data.orderId,
+            paymentStatus: PAYMENT_STATUS.FAILED,
+            paypalTransactionId: event?.resource?.id ?? "",
+          };
           const payment = await DB.PAYMENT.findOneAndUpdate({ bookingId: data.bookingId }, { $set: { ...obj } }, { new: true });
           await DB.DAHBOOKEDPLATE.findOneAndUpdate({ _id: data.bookingId }, { $set: { paymentStatus: PAYMENT_STATUS.FAILED, paymentId: payment._id } });
+          res.status(200).send("OK");
+
+          // add mail to user
+          const bookingData = await DB.DAHBOOKEDPLATE.findById(data.bookingId);
+          const getLocation = await DB.DAHLOCATION.findById(data.locationId);
+
+          if (bookingData) {
+            const mailObj = {
+              receiverEmail: bookingData.email,
+              subject: "Booking Confirmation",
+              name: bookingData.name,
+              surname: bookingData.nachname,
+              locationName: getLocation?.name,
+              rentalStart: bookingData.fromTime,
+              rentalEnd: bookingData.toTime,
+              licensePlate: bookingData.plateNumber,
+              // ANPR: "pending",
+            };
+            await EMAIL.commonEmail(mailObj);
+          }
         }
       } else {
-        console.log(event.event_type, "un handle event -----------------------------");
+        logger.info("Unhandled Event :", event.event_type);
+        res.status(200).send("OK");
       }
-
-      res.status(200).send("OK");
     } catch (error) {
-      console.error(error.response?.data || error.message || error);
+      logger.error("Error in webhook", error);
       res.status(500).send("Something went wrong");
     }
   },
