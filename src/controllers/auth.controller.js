@@ -1,13 +1,12 @@
 // const paypal = require("../services/paypal");
 const message = require("../json/message.json");
 const { PaymenModel } = require("../models");
+const paypalService = require("../services/paypal.js");
 const apiResponse = require("../utils/api.response");
 const axios = require("axios");
 const fs = require("fs");
 
-// file: createPayPalPayment.js
 const paypal = require("@paypal/checkout-server-sdk");
-// const paypal = require("@paypal/paypal-server-sdk");
 
 // 1. Setup PayPal Environment (Sandbox or Live)
 const environment = new paypal.core.SandboxEnvironment(
@@ -17,74 +16,69 @@ const environment = new paypal.core.SandboxEnvironment(
 const client = new paypal.core.PayPalHttpClient(environment);
 
 module.exports = {
-  // create waiting loder in client side till payment_status not paid ( call api every 5 sec to check database status )
+  // final create waiting loder in client side till payment_status not paid ( call api every 5 sec to check database status )
   webhook: async (req, res) => {
     try {
       const event = req.body;
-      let capturePayment;
 
       if (event.event_type === "CHECKOUT.ORDER.APPROVED") {
-        // update payment table status as order.approved here
-        // await PaymenModel.findOneAndUpdate({ orderId: obj.orderId }, { $set: obj }, { upsert: true, new: true });
-        console.log(event, "--------------------------------------- CHECKOUT.ORDER.APPROVED event");
-
+        // get meta data from webhook
+        let data = event?.resource?.purchase_units[0]?.custom_id;
         const orderId = event?.resource?.id;
-        const url = `https://api.sandbox.paypal.com/v2/checkout/orders/${orderId}/capture`;
 
-        // Generate access token
-        const tokenResponse = await axios({
-          url: `${process.env.PAYPAL_API}/v1/oauth2/token`,
-          method: "post",
-          data: "grant_type=client_credentials",
-          auth: {
-            username: process.env.CLIENT_ID,
-            password: process.env.CLIENT_SECRET,
-          },
-          headers: {
-            "Content-Type": "application/x-www-form-urlencoded",
-          },
-        });
+        if (data) {
+          data = JSON.parse(data);
 
-        const accessToken = tokenResponse.data.access_token;
+          // set in db as payment pending but order approved
+          // await DB.PAYMENT.create({
+          //   bookingId: data.bookingId,
+          //   merchant: event?.resource?.purchase_units[0]?.payee ?? {},
+          //   payer: event?.resource?.payer ?? {},
+          //   amount: event?.resource?.purchase_units[0]?.amount ?? {},
+          //   paypalOrderId: orderId,
+          //   paymentStatus: PAYMENT_STATUS.PENDING, //  order created but payment capture pending
+          // });
 
-        // Manually capture payment
-        const captureResponse = await axios({
-          url: url,
-          method: "post",
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: `Bearer ${accessToken}`,
-          },
-          body: {
-            phoneNo: 9898989898,
-            orderId: "degfrg8vbnu81gb811thb15",
-            paymentId: "brgbvvfb48jty",
-            amount: 1,
-          },
-        });
-
-        capturePayment = captureResponse.data;
-        console.log(captureResponse, "--------------------------------------- captureResponse call from order app");
-        // fs.writeFileSync('xpaymentCaptureData.json', JSON.stringify(capturePayment, null, 2));
+          // capture payment manually from user acc
+          await paypalService.capturePayment({ orderId, phoneNo: data.phoneNo });
+          res.status(200).send("OK");
+        }
       } else if (event.event_type === "PAYMENT.CAPTURE.COMPLETED") {
-        console.log(event, "------------------------------------------ PAYMENT.CAPTURE.COMPLETED");
-
-        const custom_id = event?.resource?.custom_id;
-        let userData;
-        if (custom_id) {
-          userData = JSON.parse(custom_id);
+        const data = event?.resource?.custom_id;
+        if (data) {
+          data = JSON.parse(data);
           const obj = {
-            orderId: event.id,
-            phoneNo: userData?.phoneNo,
-            paymentId: userData?.paymentId,
-            amount: 10,
+            amount: 12,
+            orderId: data.orderId,
+            phoneNo: data?.phoneNo,
+            paymentStatus: "paid",
+            seller_receivable_breakdown: event?.resource?.seller_receivable_breakdown ?? {}, // set saller payment brek down
+            paypalTransactionId: event?.resource?.id ?? "",
           };
-          // only update payment table as per orderId don't create new data
-          // await PaymenModel.create(obj);
-          // fs.writeFileSync('xpaymentCaptureWebhook.json', JSON.stringify(event, null, 2));
+
+          // save booking payment data in db
+          // const payment = await DB.PAYMENT.findOneAndUpdate({ bookingId: data.bookingId }, { $set: { ...obj } }, { new: true });
+          // await DB.DAHBOOKEDPLATE.findOneAndUpdate({ _id: data.bookingId }, { $set: { paymentStatus: PAYMENT_STATUS.PAID, paymentId: payment._id } });
+          res.status(200).send("OK");
+        }
+      } else if (event.event_type === "CHECKOUT.ORDER.DECLINED" || event.event_type === "PAYMENT.ORDER.CANCELLED" || event.event_type === "PAYMENT.CAPTURE.DENIED" || event.event_type === "PAYMENT.CAPTURE.DECLINED" || event.event_type === "PAYMENT.CAPTURE.PENDING") {
+        let data = event?.resource?.custom_id;
+        if (data) {
+          data = JSON.parse(data);
+          const obj = {
+            phoneNo: data?.phoneNo,
+            paymentStatus: "failed",
+            paypalTransactionId: event?.resource?.id ?? "",
+          };
+
+          // save booking payment data in db
+          // const payment = await DB.PAYMENT.findOneAndUpdate({ orderId: data.orderId }, { $set: { ...obj } }, { new: true });
+          // await DB.DAHBOOKEDPLATE.findOneAndUpdate({ _id: data.bookingId }, { $set: { paymentStatus: "failed", paymentId: payment._id } });
+          res.status(200).send("OK");
         }
       } else {
-        console.log(event.event_type, "unknown event -----------------------------");
+        console.log("Unhandled Event :", event.event_type);
+        res.status(200).send("OK");
       }
 
       res.status(200).send("OK");
@@ -94,10 +88,9 @@ module.exports = {
     }
   },
 
-  // final
+  // final flow
   paypalDemoAsOralense: async (req, res) => {
     try {
-      console.log("------------------------------------------ paypalDemoAsOralense");
       async function generatePaypalAccessToken() {
         const response = await axios({
           url: process.env.PAYPAL_API + "/v1/oauth2/token",
@@ -112,7 +105,6 @@ module.exports = {
       }
 
       const accessToken = await generatePaypalAccessToken();
-      console.log(accessToken, "------------------------------------------ accessToken");
       const url = `${process.env.PAYPAL_API}/v2/checkout/orders`;
       const payload = {
         intent: "CAPTURE",
@@ -142,8 +134,7 @@ module.exports = {
             custom_id: JSON.stringify({
               phoneNo: 9898989898,
               orderId: "degfrg8vbnu81gb811thb15",
-              paymentId: "brgbvvfb48jty",
-              amount: 1,
+              amount: 12,
             }),
           },
         ],
@@ -152,7 +143,7 @@ module.exports = {
           return_url: "http://localhost:3001/api/v1/auth/paypalsuccess", // redirect after approval
           shipping_preference: "NO_SHIPPING",
           user_action: "PAY_NOW",
-          brand_name: "manfra.io",
+          brand_name: "your company name",
         },
       };
 
@@ -170,7 +161,7 @@ module.exports = {
     }
   },
 
-  // paypal demo as github lac
+  // paypal demo as github lac ( optional )
   paypalOn: async (req, res) => {
     try {
       async function generateAccessToken() {
@@ -242,7 +233,7 @@ module.exports = {
     }
   },
 
-  // paypal demo with only link
+  // paypal demo with only link  ( optional )
   paypalPaymentLink: async (req, res) => {
     try {
       console.log("paypal payment ---------------------------------------------------------");
@@ -287,62 +278,7 @@ module.exports = {
     }
   },
 
-  // paypal demo with only link
-  directPaymrntCaptureLink: async (req, res) => {
-    try {
-      async function generateAccessToken() {
-        const response = await axios({
-          url: process.env.PAYPAL_API + "/v1/oauth2/token",
-          method: "post",
-          data: "grant_type=client_credentials",
-          auth: {
-            username: process.env.CLIENT_ID,
-            password: process.env.CLIENT_SECRET,
-          },
-        });
-
-        return response.data.access_token;
-      }
-
-      const accessToken = await generateAccessToken();
-
-      const url = `https://api-m.sandbox.paypal.com/v2/payments/authorizations/6DR965477U7140544/capture`;
-
-      // Manually capture payment
-      const captureResponse = await axios({
-        url: url,
-        method: "post",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${accessToken}`,
-        },
-        body: {
-          phoneNo: 9898989898,
-          orderId: "degfrg8vbnu81gb811thb15",
-          paymentId: "brgbvvfb48jty",
-          amount: 1,
-        },
-      });
-
-      // var fetch = require("node-fetch");
-      // fetch("https://api-m.sandbox.paypal.com/v2/payments/authorizations/6DR965477U7140544/capture", {
-      //   method: "POST",
-      //   headers: {
-      //     "Content-Type": "application/json",
-      //     Authorization: "Bearer A21_A.AAeMYAtAqEDt32STD8Yr1eIegfWDQ3IizjYHsmAT5mgwGFeNuBv4xxgRNj8CV5g15oMIjfBwYMrYZKviQIPoLV1lXDmZOw",
-      //     "PayPal-Request-Id": "123e4567-e89b-12d3-a456-426655440010",
-      //     Prefer: "return=representation",
-      //   },
-      //   body: JSON.stringify({}),
-      // });
-
-      return apiResponse.OK({ res, message: "generate payment link", data: { id: resData.id, link: resData.approvalLink } });
-    } catch (err) {
-      console.log("error generating", err);
-      return apiResponse.CATCH_ERROR({ res, message: message.something_went_wrong });
-    }
-  },
-
+  // success url
   paypalsuccess: async (req, res) => {
     try {
       return res.status(200).json({ message: "order is success" });
@@ -351,6 +287,7 @@ module.exports = {
     }
   },
 
+  // cancle url
   paypalcancel: async (req, res) => {
     try {
       return res.status(200).json({ message: "order is cancle" });
@@ -359,170 +296,4 @@ module.exports = {
     }
   },
 
-  // two park flow
-  TwoParkcreateBooking: async (req, res) => {
-    try {
-      console.log("req.body", req.body);
-      let { plateNumber, locationId, vehicleSize, name, nachname, strabe, email, PLZ, Stadt, telephone, fromTime, toTime, totalDuration, totalFare } = req.body;
-
-      const formattedPlateNumber = plateNumber ? plateNumber.toUpperCase() : null;
-
-      // Check for overlapping bookings
-      const overlappingBooking = await DB.DAHBOOKEDPLATE.findOne({
-        plateNumber: formattedPlateNumber,
-        locationId,
-        $or: [
-          { fromTime: { $lt: toTime }, toTime: { $gt: fromTime } }, // Checks for time overlap
-        ],
-      });
-
-      if (overlappingBooking) {
-        return apiResponse.BAD_REQUEST({ res, message: "Für dieses Kennzeichen besteht bereits eine Buchung zu dieser Zei." }); //Booking already exists for this vehicle at this location during this time
-      }
-
-      let booking = new DB.DAHBOOKEDPLATE({
-        plateNumber: formattedPlateNumber,
-        locationId,
-        vehicleSize,
-        name,
-        nachname,
-        strabe,
-        email,
-        PLZ,
-        Stadt,
-        telephone,
-        fromTime,
-        toTime,
-        totalDuration,
-        totalFare,
-        extended: false,
-        paymentStatus: PAYMENT_STATUS.PENDING,
-        paymentId: null,
-      });
-
-      let bookingSave = await booking.save();
-      let savedBooking = bookingSave.toObject();
-
-      // generate onetime paypal payment link
-      if (savedBooking) {
-        const generatePaymentLink = await paypalService.paypalOneTimePayment({
-          bookingId: savedBooking._id,
-          plateNumber: savedBooking.plateNumber,
-          telephone: savedBooking.telephone,
-          email: savedBooking.email,
-          totalFare: savedBooking.totalFare,
-        });
-        savedBooking = { ...savedBooking, paymentLink: generatePaymentLink ? generatePaymentLink : "" };
-      }
-
-      return apiResponse.OK({ res, message: "Die Buchung wurde erfolgreich durchgeführt", data: { savedBooking } }); //Booking created successfully
-    } catch (error) {
-      logger.error("Error in createBooking", error);
-      return apiResponse.CATCH_ERROR(res, "Internal server error");
-    }
-  },
-
-  // paypal webhook
-  TwoParkwebhook: async (req, res) => {
-    try {
-      const event = req.body;
-
-      if (event.event_type === "CHECKOUT.ORDER.APPROVED") {
-        let data = event?.resource?.purchase_units[0]?.custom_id;
-        const orderId = event?.resource?.id;
-
-        if (data) {
-          data = JSON.parse(data);
-
-          await DB.PAYMENT.create({
-            bookingId: data.bookingId,
-            merchant: event?.resource?.purchase_units[0]?.payee ?? {},
-            payer: event?.resource?.payer ?? {},
-            amount: event?.resource?.purchase_units[0]?.amount ?? {},
-            paypalOrderId: orderId,
-            paymentStatus: PAYMENT_STATUS.PENDING, //  order created but payment capture pending
-          });
-
-          await paypalService.capturePayment({ orderId, bookingId: data.bookingId });
-          res.status(200).send("OK");
-        }
-      } else if (event.event_type === "PAYMENT.CAPTURE.COMPLETED") {
-        let data = event?.resource?.custom_id;
-
-        if (data) {
-          data = JSON.parse(data);
-          const obj = {
-            paypalOrderId: data.orderId,
-            paymentStatus: PAYMENT_STATUS.PAID,
-            seller_receivable_breakdown: event?.resource?.seller_receivable_breakdown ?? {},
-            paypalTransactionId: event?.resource?.id ?? "",
-          };
-
-          const payment = await DB.PAYMENT.findOneAndUpdate({ bookingId: data.bookingId }, { $set: { ...obj } }, { new: true });
-          await DB.DAHBOOKEDPLATE.findOneAndUpdate({ _id: data.bookingId }, { $set: { paymentStatus: PAYMENT_STATUS.PAID, paymentId: payment._id } });
-          res.status(200).send("OK");
-
-          // send confirmation mail
-          if (data.bookingId) {
-            const bookingData = await DB.DAHBOOKEDPLATE.findById(data.bookingId);
-            const getLocation = await DB.DAHLOCATION.findById(bookingData.locationId);
-
-            if (bookingData) {
-              const mailObj = {
-                receiverEmail: bookingData.email,
-                subject: "Buchungsbestätigung",
-                name: bookingData.name,
-                surname: bookingData.nachname,
-                locationName: getLocation?.name,
-                rentalStart: moment(bookingData.fromTime).format("YYYY-MM-DD HH:mm:ss"),
-                rentalEnd: moment(bookingData.toTime).format("YYYY-MM-DD HH:mm:ss"),
-                licensePlate: bookingData.plateNumber,
-                year: moment(bookingData.toTime).format("YYYY"),
-              };
-              await EMAIL.commonEmail(mailObj);
-            }
-          }
-        }
-      } else if (event.event_type === "CHECKOUT.ORDER.DECLINED" || event.event_type === "PAYMENT.ORDER.CANCELLED" || event.event_type === "PAYMENT.CAPTURE.DENIED" || event.event_type === "PAYMENT.CAPTURE.DECLINED" || event.event_type === "PAYMENT.CAPTURE.PENDING") {
-        let data = event?.resource?.custom_id;
-        if (data) {
-          data = JSON.parse(data);
-
-          const obj = {
-            paypalOrderId: data.orderId,
-            paymentStatus: PAYMENT_STATUS.FAILED,
-            paypalTransactionId: event?.resource?.id ?? "",
-          };
-          const payment = await DB.PAYMENT.findOneAndUpdate({ bookingId: data.bookingId }, { $set: { ...obj } }, { new: true });
-          await DB.DAHBOOKEDPLATE.findOneAndUpdate({ _id: data.bookingId }, { $set: { paymentStatus: PAYMENT_STATUS.FAILED, paymentId: payment._id } });
-          res.status(200).send("OK");
-
-          // add mail to user
-          const bookingData = await DB.DAHBOOKEDPLATE.findById(data.bookingId);
-          const getLocation = await DB.DAHLOCATION.findById(data.locationId);
-
-          if (bookingData) {
-            const mailObj = {
-              receiverEmail: bookingData.email,
-              subject: "Booking Confirmation",
-              name: bookingData.name,
-              surname: bookingData.nachname,
-              locationName: getLocation?.name,
-              rentalStart: bookingData.fromTime,
-              rentalEnd: bookingData.toTime,
-              licensePlate: bookingData.plateNumber,
-              // ANPR: "pending",
-            };
-            await EMAIL.commonEmail(mailObj);
-          }
-        }
-      } else {
-        logger.info("Unhandled Event :", event.event_type);
-        res.status(200).send("OK");
-      }
-    } catch (error) {
-      logger.error("Error in webhook", error);
-      res.status(500).send("Something went wrong");
-    }
-  },
 };

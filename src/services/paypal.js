@@ -1,6 +1,5 @@
 const axios = require("axios");
 const fs = require("fs");
-const { logger } = require("../utils/logger");
 // const paypal = require("@paypal/checkout-server-sdk");      // deprecated
 const paypal = require("@paypal/paypal-server-sdk");
 
@@ -34,9 +33,8 @@ module.exports = {
   },
 
   // paypal one time payment
-  paypalOneTimePayment: async ({ bookingId, plateNumber, telephone, email, totalFare }) => {
+  paypalOneTimePayment: async () => {
     try {
-      console.log(bookingId, plateNumber, telephone, email, totalFare, "------------------------------------------ paypalDemoAsOralense");
 
       const accessToken = await generatePaypalAccessToken();
       console.log(accessToken, "------------------------------------------ paypalDemoAsOralense/accessToken");
@@ -53,26 +51,26 @@ module.exports = {
                 quantity: 1,
                 unit_amount: {
                   currency_code: "EUR",
-                  value: totalFare,
+                  value: "12",
                 },
               },
             ],
             amount: {
               currency_code: "EUR",
-              value: totalFare,
+              value: "12",
               breakdown: {
                 item_total: {
                   currency_code: "EUR",
-                  value: totalFare,
+                  value: "12",
                 },
               },
             },
             custom_id: JSON.stringify({
-              bookingId: bookingId,
-              plateNumber: plateNumber,
-              telephone: telephone,
-              email: email,
-              totalFare: totalFare,
+              bookingId: "bookingId",
+              plateNumber: "plateNumber",
+              telephone: "telephone",
+              email: "email",
+              totalFare: "totalFare",
             }),
           },
         ],
@@ -98,11 +96,12 @@ module.exports = {
 
       return approvedLink;
     } catch (error) {
-      logger.error("Error in paypalOneTimePayment", error);
+      console.log("Error in paypalOneTimePayment", error);
       throw error;
     }
   },
 
+  // capture payment manually
   capturePayment: async (data) => {
     const url = `${process.env.PAYPAL_SANDBOX_URL}/v2/checkout/orders/${data.orderId}/capture`;
     const accessToken = await generatePaypalAccessToken();
@@ -115,7 +114,7 @@ module.exports = {
       },
       body: {
         orderId: data.orderId,
-        bookingId: data.bookingId,
+        phoneNo: data.phoneNo,
       },
     });
     return captureResponse;
