@@ -3,6 +3,7 @@ const { PaymenModel, BookingModel } = require("../models");
 const paypalService = require("../services/paypal.js");
 const apiResponse = require("../utils/api.response");
 const axios = require("axios");
+const fs = require("fs");
 
 const paypal = require("@paypal/checkout-server-sdk");
 
@@ -45,8 +46,8 @@ module.exports = {
       // demo url ==> http://localhost:3001/api/v1/auth/paypalsuccess?bookingId=680d0205406f8dc6d3f93989&token=7RJ84206VW602590G&PayerID=MGGDHYZ9S9BMA
       // const orderId = req.query.token;  // get order id as token which is directly set in query by paypal
       // const bookingId = req.query.bookingId
-      const orderId = "7RJ84206VW602590G";    // success order
-      const bookingId = "680d0205406f8dc6d3f93989"
+      const orderId = "0SJ32560M69799021";    // success order
+      const bookingId = "680d0715e88f9266d9a1c992"
       if (orderId) {
         const url = `${process.env.PAYPAL_SANDBOX_URL}/v2/checkout/orders/${orderId}/capture`;
         const accessToken = await paypalService.generatePaypalAccessToken();
@@ -69,11 +70,12 @@ module.exports = {
           if (status == "COMPLETED") {
             const payment = await PaymenModel.create({
               paypalOrderId: orderId,
-              payer: req.query.PayerID,
-              paypalTransactionId: captureResponse.id,
+              payer: captureResponse.data.payer,
+              paypalTransactionId: captureResponse.data.purchase_units[0].payments.captures[0].id,
               bookingId: bookingId,
               paymentStatus: "paid",
-              amount: booking.amount
+              amount: booking.amount,
+              seller_receivable_breakdown: captureResponse.data.purchase_units[0].payments.captures[0].seller_receivable_breakdown ?? {}
             });
 
             booking = await BookingModel.findOneAndUpdate({ _id: bookingId }, { paymentStatus: 'paid', paymentId: payment._id })
