@@ -56,5 +56,10 @@ youtube example with credit card paypal payment :- https://www.youtube.com/watch
     integrat with sdk:- https://developer.paypal.com/studio/checkout/standard/integrate
     integrat with apis:- https://developer.paypal.com/docs/api/orders/v2/#orders_create
     also about webhook :- https://developer.paypal.com/api/rest/webhooks/simulator/
- 
+
+ 6) list some question
+    orderId thi 2nd time hit kriye to payment pachu deduct thse
+    order cancle thya pchi pachu capture kriye to payment capture the
+    payment confirmation payment capture ni api ma mlse status=completed
+
  
