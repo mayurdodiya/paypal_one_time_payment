@@ -3,12 +3,12 @@ const authController = require("../controllers/auth.controller");
 
 const router = express.Router();
 
-// OPTION : 1
+// OPTION : 1 WITHOUT WEBHOOK (using rest api)=========================================================
 router.post("/paypalDemoWithoutWebhook", authController.paypalDemoWithoutWebhook);
 router.post("/capturePayment", authController.capturePayment);
 
 
-// OPTION : 2
+// OPTION : 2 WITH WEBHOOK (using rest api)============================================================
 router.post("/paypalDemoWithWebhook", authController.paypalDemoWithWebhook);
 router.post("/webhook", authController.webhook);
 router.post("/checkpayment", authController.checkpayment);

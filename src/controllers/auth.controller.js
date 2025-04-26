@@ -42,12 +42,13 @@ module.exports = {
   // call this capturePayment endpoint from frontend when paypal redirect as success url in frontend
   capturePayment: async (req, res) => {
     try {
-      // demo url ==> https://dev-parkschein-2park.netlify.app/verify-payment?680c85d17acd092621a76f95&token=4ML73926KP0936411&PayerID=MGGDHYZ9S9BMA
-      const orderId = "4ML73926KP0936411";    // success order
+      // demo url ==> http://localhost:3001/api/v1/auth/paypalsuccess?bookingId=680d0205406f8dc6d3f93989&token=7RJ84206VW602590G&PayerID=MGGDHYZ9S9BMA
       // const orderId = req.query.token;  // get order id as token which is directly set in query by paypal
-      const bookingId = req.query.bookingId
+      // const bookingId = req.query.bookingId
+      const orderId = "7RJ84206VW602590G";    // success order
+      const bookingId = "680d0205406f8dc6d3f93989"
       if (orderId) {
-        const url = `${PAYPAL_URL}/v2/checkout/orders/${orderId}/capture`;
+        const url = `${process.env.PAYPAL_SANDBOX_URL}/v2/checkout/orders/${orderId}/capture`;
         const accessToken = await paypalService.generatePaypalAccessToken();
         const captureResponse = await axios({
           url: url,
@@ -61,21 +62,21 @@ module.exports = {
             // bookingId: data.bookingId,
           },
         });
-        console.log(captureResponse, "-------------------------------- captureResponse");
 
         if (captureResponse) {
+          let booking = await BookingModel.findById(bookingId)
           const status = captureResponse?.data?.status;
           if (status == "COMPLETED") {
-            const [payment, booking] = await Promise.all([
-              PaymenModel.create({
-                paypalOrderId: orderId,
-                payer: req.query.PayerID,
-                paypalTransactionId: captureResponse.id,
-                bookingId: bookingId,
-                paymentStatus: "paid",
-              }),
-              BookingModel.findOneAndUpdate({ _id: bookingId }, { paymentStatus: 'paid' })
-            ])
+            const payment = await PaymenModel.create({
+              paypalOrderId: orderId,
+              payer: req.query.PayerID,
+              paypalTransactionId: captureResponse.id,
+              bookingId: bookingId,
+              paymentStatus: "paid",
+              amount: booking.amount
+            });
+
+            booking = await BookingModel.findOneAndUpdate({ _id: bookingId }, { paymentStatus: 'paid', paymentId: payment._id })
             return apiResponse.OK({ res, message: "payment capture successfully", data: { payment: payment, booking: booking } }); //payment capture successfully          }
           } else {
             const [payment, booking] = await Promise.all([
