@@ -2,19 +2,34 @@ const mongoose = require("mongoose");
 
 const paymentSchema = mongoose.Schema(
   {
-    orderId: {
+    bookingId: {
       type: String,
     },
-    phoneNo: {
+    paypalOrderId: {
       type: String,
-      default: null,
     },
-    paymentId: {
+    paypalTransactionId: {
       type: String,
     },
     amount: {
       type: Number,
       default: 0,
+    },
+    paymentStatus: {
+      type: String,
+      default: "pending"
+    },
+    payer: {
+      type: Object,
+      default: {},
+    },
+    merchant: {
+      type: Object,
+      default: {},
+    },
+    seller_receivable_breakdown: {
+      type: Object,
+      default: {},
     },
   },
   { timestamps: true, versionKey: false }

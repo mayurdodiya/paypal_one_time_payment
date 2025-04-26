@@ -1,7 +1,4 @@
 const axios = require("axios");
-const fs = require("fs");
-// const paypal = require("@paypal/checkout-server-sdk");      // deprecated
-const paypal = require("@paypal/paypal-server-sdk");
 
 // generate paypal access token ( for current file )
 async function generatePaypalAccessToken() {
@@ -33,11 +30,10 @@ module.exports = {
   },
 
   // paypal one time payment
-  paypalOneTimePayment: async () => {
+  paypalOneTimePaymentWithWebhook: async (data) => {
     try {
 
       const accessToken = await generatePaypalAccessToken();
-      console.log(accessToken, "------------------------------------------ paypalDemoAsOralense/accessToken");
 
       const url = `${process.env.PAYPAL_SANDBOX_URL}/v2/checkout/orders`;
       const payload = {
@@ -51,35 +47,32 @@ module.exports = {
                 quantity: 1,
                 unit_amount: {
                   currency_code: "EUR",
-                  value: "12",
+                  value: data.amount,
                 },
               },
             ],
             amount: {
               currency_code: "EUR",
-              value: "12",
+              value: data.amount,
               breakdown: {
                 item_total: {
                   currency_code: "EUR",
-                  value: "12",
+                  value: data.amount,
                 },
               },
             },
             custom_id: JSON.stringify({
-              bookingId: "bookingId",
-              plateNumber: "plateNumber",
-              telephone: "telephone",
-              email: "email",
-              totalFare: "totalFare",
+              bookingId: data._id,
+              amount: data.amount,
             }),
           },
         ],
         application_context: {
           cancel_url: process.env.CANCEL_URL, // redirect on cancel
-          return_url: `${process.env.VERIFIYING_URL}?${bookingId}`, // redirect after approval
+          return_url: `${process.env.VERIFIYING_URL}?bookingId=${data._id}`, // redirect after approval
           shipping_preference: "NO_SHIPPING",
           user_action: "PAY_NOW",
-          brand_name: "2Park GmbH",
+          brand_name: "your company name",
           // landing_page: "LOGIN",  //  check in docs "LOGIN" (default) or "BILLING" (shows credit card form)
         },
       };
@@ -92,7 +85,6 @@ module.exports = {
       });
 
       const approvedLink = response?.data?.links.find((link) => link.rel === "approve").href;
-      console.log(response?.data?.links, "------------------------------------------ paypalDemoAsOralense/response?.data?.links");
 
       return approvedLink;
     } catch (error) {
@@ -114,9 +106,74 @@ module.exports = {
       },
       body: {
         orderId: data.orderId,
-        phoneNo: data.phoneNo,
+        bookingId: data.bookingId,
       },
     });
     return captureResponse;
+  },
+
+
+  // paypal one time payment paypal Without Webhook
+  paypalOneTimePamentWithoutWebhook: async (data) => {
+    try {
+
+      const accessToken = await generatePaypalAccessToken();
+
+      const url = `${process.env.PAYPAL_SANDBOX_URL}/v2/checkout/orders`;
+      const payload = {
+        intent: "CAPTURE",
+        purchase_units: [
+          {
+            items: [
+              {
+                name: "Parking Rent",
+                description: "Parking booking for rent",
+                quantity: 1,
+                unit_amount: {
+                  currency_code: "EUR",
+                  value: data.amount,
+                },
+              },
+            ],
+            amount: {
+              currency_code: "EUR",
+              value: data.amount,
+              breakdown: {
+                item_total: {
+                  currency_code: "EUR",
+                  value: data.amount,
+                },
+              },
+            },
+            custom_id: JSON.stringify({
+              bookingId: data._id,
+              phoneNo: data.phoneNo,
+            }),
+          },
+        ],
+        application_context: {
+          cancel_url: process.env.CANCEL_URL, // redirect on cancel
+          return_url: `${process.env.SUCCESS_URL}?bookingId=${data._id}`, // redirect after approval(paypal send orderId and as token and payerId)
+          shipping_preference: "NO_SHIPPING",
+          user_action: "PAY_NOW",
+          brand_name: "your company name",
+          // landing_page: "LOGIN",  //  check in docs "LOGIN" (default) or "BILLING" (shows credit card form)
+        },
+      };
+
+      const response = await axios.post(url, payload, {
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${accessToken}`,
+        },
+      });
+
+      const approvedLink = response?.data?.links.find((link) => link.rel === "approve").href;
+
+      return approvedLink;
+    } catch (error) {
+      console.log("Error in paypalOneTimePayment", error);
+      throw error;
+    }
   },
 };
