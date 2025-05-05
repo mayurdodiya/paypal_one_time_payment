@@ -1,4 +1,5 @@
 const axios = require("axios");
+const fs = require("fs");
 
 // generate paypal access token ( for current file )
 async function generatePaypalAccessToken() {
@@ -70,9 +71,10 @@ module.exports = {
         application_context: {
           cancel_url: process.env.CANCEL_URL, // redirect on cancel
           return_url: `${process.env.VERIFIYING_URL}?bookingId=${data._id}`, // redirect after approval
-          shipping_preference: "NO_SHIPPING",
+          // shipping_preference: "NO_SHIPPING",
           user_action: "PAY_NOW",
           brand_name: "your company name",
+           "shipping_preference": "GET_FROM_FILE"
           // landing_page: "LOGIN",  //  check in docs "LOGIN" (default) or "BILLING" (shows credit card form)
         },
       };
@@ -176,4 +178,31 @@ module.exports = {
       throw error;
     }
   },
+
+  // delete
+  getPayPalOrder: async (data) => {
+
+    const orderId = data.orderId
+    const accessToken = await generatePaypalAccessToken();
+
+    // 2. Get order details
+    const orderResponse = await axios({
+      url: `https://api-m.sandbox.paypal.com/v2/checkout/orders/${orderId}`,
+      method: 'get',
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${accessToken}`,
+      },
+    });
+
+    console.log(orderResponse.data, '------------------------------------ address detail function');
+    console.log(orderResponse.data.purchase_units[0].shipping, '------------------------------------ address detail function');
+    // const jsonData = JSON.stringify(orderResponse.data, null, 2); // null, 2 for pretty printig
+    fs.writeFileSync('xyz.json',  JSON.stringify(orderResponse.data, null, 2))
+  }
+
 };
+
+
+// // Example usage
+// getPayPalOrder('5O190127TN364715T').catch(console.error);

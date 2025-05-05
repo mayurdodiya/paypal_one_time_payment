@@ -1,5 +1,5 @@
 youtube example with credit card paypal payment :- https://www.youtube.com/watch?v=iLBWtIEOeug
-
+use ngrok mush because vs code port is not working
 1)we can integrate in two ways
     using sdk ( npm library of paypal )
     using Rest apis of paypal ( using axios to call api )

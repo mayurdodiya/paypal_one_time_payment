@@ -11,7 +11,7 @@ router.post("/capturePayment", authController.capturePayment);
 // OPTION : 2 WITH WEBHOOK (using rest api)============================================================
 router.post("/paypalDemoWithWebhook", authController.paypalDemoWithWebhook);
 router.post("/webhook", authController.webhook);
-router.post("/checkpayment", authController.checkpayment);
+router.get("/checkpayment", authController.checkpayment);
 
 
 // OPTION : 3
@@ -24,6 +24,6 @@ router.get("/paypalcancel", authController.paypalcancel);
 
 
 // webhook example
-// us app webhook =>  https://162c-2405-201-200d-115e-8611-16d9-c6c0-2895.ngrok-free.app/v1/auth/webhook/us_bussiness_app
+// us app webhook =>  https://brpmpr08-3001.inc1.devtunnels.ms/v1/auth/webhook
 
 module.exports = router;
